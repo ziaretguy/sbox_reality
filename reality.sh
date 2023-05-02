@@ -329,6 +329,42 @@ change_conf(){
     esac
 }
 
+enable_bbr() {
+    if grep -q "net.core.default_qdisc=fq" /etc/sysctl.conf && grep -q "net.ipv4.tcp_congestion_control=bbr" /etc/sysctl.conf; then
+        echo -e "${green}BBR is already enabled!${plain}"
+        exit 0
+    fi
+
+    # Check the OS and install necessary packages
+    if [[ "$(cat /etc/os-release | grep -E '^ID=' | awk -F '=' '{print $2}')" == "ubuntu" ]]; then
+        sudo apt-get update && sudo apt-get install -yqq --no-install-recommends ca-certificates
+    elif [[ "$(cat /etc/os-release | grep -E '^ID=' | awk -F '=' '{print $2}')" == "debian" ]]; then
+        sudo apt-get update && sudo apt-get install -yqq --no-install-recommends ca-certificates
+    elif [[ "$(cat /etc/os-release | grep -E '^ID=' | awk -F '=' '{print $2}')" == "fedora" ]]; then
+        sudo dnf -y update && sudo dnf -y install ca-certificates
+    elif [[ "$(cat /etc/os-release | grep -E '^ID=' | awk -F '=' '{print $2}')" == "centos" ]]; then
+        sudo yum -y update && sudo yum -y install ca-certificates
+    else
+        echo "Unsupported operating system. Please check the script and install the necessary packages manually."
+        exit 1
+    fi
+
+    # Enable BBR
+    echo "net.core.default_qdisc=fq" | sudo tee -a /etc/sysctl.conf
+    echo "net.ipv4.tcp_congestion_control=bbr" | sudo tee -a /etc/sysctl.conf
+
+    # Apply changes
+    sudo sysctl -p
+
+    # Verify that BBR is enabled
+    if [[ $(sysctl net.ipv4.tcp_congestion_control | awk '{print $3}') == "bbr" ]]; then
+        echo -e "${green}BBR has been enabled successfully.${plain}"
+    else
+        echo -e "${red}Failed to enable BBR. Please check your system configuration.${plain}"
+    fi
+}
+
+
 menu(){
     clear
     echo "#############################################################"
@@ -351,9 +387,11 @@ menu(){
     echo " -------------"
     echo -e " ${GREEN}6.${PLAIN} modify Sing-box Reality configuration"
     echo " -------------"
+    echo -e " ${GREEN}7.${PLAIN} enable bbr"
+    echo " -------------"
     echo -e " ${GREEN}0.${PLAIN} quit"
     echo ""
-    read -rp " please enter options [0-6] ：" answer
+    read -rp " please enter options [0-7] ：" answer
     case $answer in
         1) install_singbox ;;
         2) uninstall_singbox ;;
@@ -361,7 +399,8 @@ menu(){
         4) stop_singbox ;;
         5) stop_singbox && start_singbox ;;
         6) change_conf ;;
-        *) red "Please enter the correct option [0-6]！" && exit 1 ;;
+        7) enable_bbr ;;
+        *) red "Please enter the correct option [0-7]！" && exit 1 ;;
     esac
 }
 
