@@ -1,1 +1,4 @@
 # sbox_reality
+VLESS Reality protocol script based on Sing-box kernel
+
+wget -N --no-check-certificate https://raw.githubusercontent.com/ziaretguy/sbox-reality/main/reality.sh && bash reality.sh
