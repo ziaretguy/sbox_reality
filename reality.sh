@@ -153,20 +153,7 @@ install_singbox(){
             "type": "block",
             "tag": "block"
         }
-    ],
-    "route": {
-        "rules": [
-            {
-                "geoip": "cn",
-                "outbound": "block"
-            },
-            {
-                "geosite": "category-ads-all",
-                "outbound": "block"
-            }
-        ],
-        "final": "direct"
-    }
+    ]
 }
 EOF
 
